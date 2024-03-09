@@ -5,139 +5,59 @@ const { Parser } = require('json2csv');
 
 let parser = new Parser();
 
-// Delay function
-function delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function scrapFunction() {
-
-    const browser = await puppeteer.launch({
-        headless: false,
-        // args: ['--incognito'],
-        args: ['--incognito', '--start-maximized'],
-    });
-
-    const page = await browser.newPage();
-    await page.setViewport({width: 1920, height: 1080});
-
-    // await page.goto('https://www.marcusmillichap.com/properties#pageNumber=1&stb=orderdate,DESC', {
-    //     timeout: 500000
-    // });
-
-    // await delay(3000);
-
-    const price_range = [
-        {min: 0, max: 1000000},
-        {min: 1000001, max: 60000000},
-        {min: 60000001, max: 80000000},
-        {min: 80000000, max: 100000000},
-        {min: 100000001, max: 110000000},
-        {min: 110000001, max: 130000000},
-        {min: 130000001, max: 150000000},
-        {min: 150000001, max: 170000000},
-        {min: 170000001, max: 190000000},
-        {min: 190000001, max: 210000000},
-        {min: 210000001, max: 230000000},
-        {min: 230000001, max: 250000000},
-        {min: 250000001, max: 270000000},
-        {min: 270000001, max: 290000000},
-        {min: 290000001, max: 310000000},
-        {min: 310000001, max: 330000000},
-        {min: 330000001, max: 350000000},
-        {min: 350000001, max: 370000000},
-        {min: 370000001, max: 390000000},
-        {min: 410000001, max: 430000000},
-        {min: 430000001, max: 430000000},
-        {min: 430000001, max: 450000000},
-        {min: 450000001, max: 470000000},
-        {min: 470000001, max: 490000000},
-        {min: 490000001, max: 510000000},
-        {min: 510000001, max: 530000000},
-        {min: 530000001, max: 550000000},
-        {min: 550000001, max: 570000000},
-        {min: 570000001, max: 590000000},
-        {min: 590000001, max: 610000000},
-        {min: 610000001, max: 630000000},
-        {min: 630000001, max: 650000000},
-        {min: 650000001, max: 670000000},
-        {min: 670000001, max: 690000000},
-        {min: 690000001, max: 710000000},
-        {min: 710000001, max: 730000000},
-        {min: 730000001, max: 750000000},
-        {min: 750000001, max: 770000000},
-        {min: 770000001, max: 790000000},
-        {min: 790000001, max: 810000000},
-        {min: 810000001, max: 830000000},
-        {min: 830000001, max: 850000000},
-        {min: 850000001, max: 870000000},
-        {min: 870000001, max: 890000000},
-        {min: 890000001, max: 910000000},
-        {min: 910000001, max: 930000000},
-        {min: 930000001, max: 950000000},
-        {min: 950000001, max: 970000000},
-        {min: 970000001, max: 990000000},
-        {min: 990000001, max: 1000000000},
-        {min: 1000000001, max: 1500000000},
-        {min: 1500000001, max: 2500000000},
-        {min: 2500000001, max: 100000000000}
-    ];
-
-    let link_list = [];
-
-    for (let j = 0; j < price_range.length; j++) {
-        const min_price = price_range[j].min;
-        const max_price = price_range[j].max;
-        console.log("-- ", j, " -- >>>> ", min_price, " ~ ", max_price, " ----");
-        const range_url = `https://www.marcusmillichap.com/properties#r-listingprice=${min_price}~${max_price}&pageNumber=1&stb=orderdate,DESC`
         
-        await page.goto(range_url, {
-            timeout: 500000
-        });
-        await page.reload();
-        // await delay(2000);
-        
-        for (let i = 1; i < 10; i++) {
-            try {
-                await delay(3000);
-                const card_list = await page.$$("#property-search > div > div > div > div > div > ul > li > div > a");
-                for( let card of card_list ) {
-                    const attr = await page.evaluate(el => el.getAttribute("href"), card);
-                    console.log("attr >>> ", attr);
-                    if (attr != null) {
-                        attr = "https://www.marcusmillichap.com" + attr;
-                        // link_list.push(attr);
-                        const result = { attr };
-                        const csv = parser.parse(result);
-                        const csvDataWithoutHeader = csv.split('\n')[1] + '\n';
-                        fs.appendFileSync("marcusmillichap_link.csv", csvDataWithoutHeader, 'utf8', (err) => {
-                            if (err) {
-                                console.error('Error appending to CSV file:', err);
-                            } else {
-                                console.log('CSV data appended successfully.');
-                            }
-                        });
-                    }
-                }
-                let flag_text = "";
-                const next_btn_flag = await page.$(".next a");
-                flag_text = await page.evaluate(el => el.getAttribute("aria-label"), next_btn_flag);
-                console.log("flag text >>> ", flag_text);
-                await page.evaluate(() => {
-                    const next_btn = document.querySelector(".next > a");
-                    next_btn.click();
-                })
-            } catch (error) {
-                break;
+    for (let i = 0; i < 36; i++) {
+        const request_body = `polygon_geojson=&lat_min=&lat_max=&lng_min=&lng_max=&mobile_lat_min=&mobile_lat_max=&mobile_lng_min=&mobile_lng_max=&page=${i}&map_display_limit=5000&map_type=roadmap&country_restrictions=us&custom_map_marker_url=%2F%2Fs3.amazonaws.com%2Fbuildout-production%2Fbrandings%2F6929%2Fprofile_photo%2Fsmall.png%3F1600277316&use_marker_clusterer=true&placesAutoComplete=&q%5Btype_use_offset_eq_any%5D%5B%5D=&q%5Bsale_price_gteq%5D=&q%5Bsale_price_lteq%5D=&q%5Bsale_or_lease_eq%5D=&q%5Bstate_eq_any%5D%5B%5D=&q%5Bbuilding_size_sf_gteq%5D=&q%5Bbuilding_size_sf_lteq%5D=&q%5Blistings_data_max_space_available_on_market_gteq%5D=&q%5Blistings_data_min_space_available_on_market_lteq%5D=&q%5Bproperty_use_id_eq_any%5D%5B%5D=&q%5Bmax_lease_rate_monthly_gteq%5D=&q%5Bmin_lease_rate_monthly_lteq%5D=&q%5Bcap_rate_pct_gteq%5D=&q%5Bcap_rate_pct_lteq%5D=&q%5Bmax_lease_rate_gteq%5D=&q%5Bmin_lease_rate_lteq%5D=&q%5Bhas_broker_ids%5D%5B%5D=&q%5Bs%5D%5B%5D=sale_price+desc&q%5Bcompany_id_in%5D%5B%5D=2419&q%5Bcompany_id_in%5D%5B%5D=254&q%5Bcompany_id_in%5D%5B%5D=2420&q%5Bcompany_id_in%5D%5B%5D=2421&q%5Bcompany_id_in%5D%5B%5D=2422&q%5Bcompany_id_in%5D%5B%5D=2424&q%5Bcompany_id_in%5D%5B%5D=2425&q%5Bcompany_id_in%5D%5B%5D=2426&q%5Bcompany_id_in%5D%5B%5D=2428&q%5Bcompany_id_in%5D%5B%5D=2429&q%5Bcompany_id_in%5D%5B%5D=2430&q%5Bcompany_id_in%5D%5B%5D=2431&q%5Bcompany_id_in%5D%5B%5D=2432&q%5Bcompany_id_in%5D%5B%5D=2433&q%5Bcompany_id_in%5D%5B%5D=2434&q%5Bcompany_id_in%5D%5B%5D=2436&q%5Bcompany_id_in%5D%5B%5D=2437&q%5Bcompany_id_in%5D%5B%5D=2438&q%5Bcompany_id_in%5D%5B%5D=2439&q%5Bcompany_id_in%5D%5B%5D=2440&q%5Bcompany_id_in%5D%5B%5D=1702&q%5Bcompany_id_in%5D%5B%5D=2442&q%5Bcompany_id_in%5D%5B%5D=2443&q%5Bcompany_id_in%5D%5B%5D=2518&q%5Bcompany_id_in%5D%5B%5D=2462&q%5Bcompany_id_in%5D%5B%5D=2463&q%5Bcompany_id_in%5D%5B%5D=1284&q%5Bcompany_id_in%5D%5B%5D=2465&q%5Bcompany_id_in%5D%5B%5D=2466&q%5Bcompany_id_in%5D%5B%5D=2354&q%5Bcompany_id_in%5D%5B%5D=2468&q%5Bcompany_id_in%5D%5B%5D=2469&q%5Bcompany_id_in%5D%5B%5D=2470&q%5Bcompany_id_in%5D%5B%5D=2472&q%5Bcompany_id_in%5D%5B%5D=2474&q%5Bcompany_id_in%5D%5B%5D=2475&q%5Bcompany_id_in%5D%5B%5D=2476&q%5Bcompany_id_in%5D%5B%5D=2477&q%5Bcompany_id_in%5D%5B%5D=2478&q%5Bcompany_id_in%5D%5B%5D=2494&q%5Bcompany_id_in%5D%5B%5D=2480&q%5Bcompany_id_in%5D%5B%5D=2481&q%5Bcompany_id_in%5D%5B%5D=2487&q%5Bcompany_id_in%5D%5B%5D=2482&q%5Bcompany_id_in%5D%5B%5D=2449&q%5Bcompany_id_in%5D%5B%5D=2483&q%5Bcompany_id_in%5D%5B%5D=2479&q%5Bcompany_id_in%5D%5B%5D=2447&q%5Bcompany_id_in%5D%5B%5D=2448&q%5Bcompany_id_in%5D%5B%5D=2484&q%5Bcompany_id_in%5D%5B%5D=2920&q%5Bcompany_id_in%5D%5B%5D=5246&q%5Bcompany_id_in%5D%5B%5D=5629&q%5Bcompany_id_in%5D%5B%5D=6653`;
+        await fetch("https://buildout.com/plugins/2763b1ccb3029ac01ba33222d9f0af7bb29a166d/inventory", {
+            "headers": {
+                "accept": "application/json, text/javascript, */*; q=0.01",
+                "accept-language": "en-US,en;q=0.9,ko;q=0.8",
+                "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Google Chrome\";v=\"122\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "x-requested-with": "XMLHttpRequest",
+                "cookie": "_ga=GA1.1.234793834.1709742396; _cookie_preferences=%7B%22analytics%22%3Atrue%7D; _ga_YPL38J0CY7=GS1.1.1709934742.4.1.1709935048.0.0.0",
+                "Referer": "https://buildout.com/plugins/2763b1ccb3029ac01ba33222d9f0af7bb29a166d/www.avisonyoung.us/inventory/?pluginId=0&iframe=true&embedded=true&cookieConsentControl=hubspot&cacheSearch=true&=undefined",
+                "Referrer-Policy": "strict-origin-when-cross-origin"
+            },
+            "body": request_body,
+            "method": "POST"
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log("response okay!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                return response.json(); // assuming the response is in JSON format
+            } else {
+                throw new Error("Request failed with status " + response.status);
             }
-            
-        }
+        })
+        .then(data => {
+            result_data = data.inventory;
+            for (let i = 0; i < result_data.length; i++) {
+                const link = result_data[i].show_link;
+                console.log(link);
+                const result = { link };
+                const csv = parser.parse(result);
+                const csvDataWithoutHeader = csv.split('\n')[1] + '\n';
+                fs.appendFileSync("avisonyoung_link.csv", csvDataWithoutHeader, 'utf8', (err) => {
+                    if (err) {
+                        console.error('Error appending to CSV file:', err);
+                    } else {
+                        console.log('CSV data appended successfully.');
+                    }
+                });
+                
+            }
+        })
+        .catch(error => {
+            console.error("No match result ...");
+        });
     }
-
-    // console.log("result >>> ", link_list.length, link_list);
-        
-    await browser.close();
-    
 }
 
 scrapFunction();
